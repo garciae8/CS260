@@ -1,0 +1,53 @@
+#include <iostream>
+
+struct Node {
+    int data;
+    Node* next;
+    Node(int val) : data(val), next(nullptr) {}
+};
+
+class SortedLinkedList {
+private:
+    Node* head;
+
+public:
+    SortedLinkedList() : head(nullptr) {}
+
+    void insert(int val) {
+        Node* newNode = new Node(val);
+        if (!head || val < head->data) {
+            newNode->next = head;
+            head = newNode;
+        } else {
+            Node* current = head;
+            while (current->next && current->next->data < val) {
+                current = current->next;
+            }
+            newNode->next = current->next;
+            current->next = newNode;
+        }
+    }
+
+    bool search(int val) {
+        Node* current = head;
+        while (current) {
+            if (current->data == val) {
+                return true;
+            }
+            current = current->next;
+        }
+        return false;
+    }
+};
+
+int main() {
+    SortedLinkedList list;
+    list.insert(5);
+    list.insert(3);
+    list.insert(7);
+
+    std::cout << "Search 3: " << (list.search(3) ? "Found" : "Not Found") << std::endl;
+    std::cout << "Search 8: " << (list.search(8) ? "Found" : "Not Found") << std::endl;
+
+    return 0;
+}
