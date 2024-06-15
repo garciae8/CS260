@@ -1,0 +1,114 @@
+#include <iostream>
+#include <vector>
+
+template<typename KeyType, typename ValueType>
+class SimpleHashtable {
+private:
+    std::vector<std::pair<KeyType, ValueType>> table;
+    size_t size;
+
+    // Hash function for generating index from key
+    size_t hash(const KeyType& key) {
+        // Simple modulo hashing
+        return std::hash<KeyType>{}(key) % size;
+    }
+
+public:
+    // Constructor to initialize the hashtable with given size
+    SimpleHashtable(size_t tableSize) : size(tableSize) {
+        table.resize(size);
+    }
+
+    // Insert a key-value pair into the hashtable
+    void insert(const KeyType& key, const ValueType& value) {
+        size_t index = hash(key);
+        // Check if key already exists, if yes, overwrite value
+        table[index] = std::make_pair(key, value);
+    }
+
+    // Check if the hashtable contains the given key
+    bool contains(const KeyType& key) {
+        size_t index = hash(key);
+        return table[index].first == key;
+    }
+};
+
+template<typename KeyType, typename ValueType>
+class SmarterHashtable {
+private:
+    std::vector<std::pair<KeyType, ValueType>> table;
+    size_t size;
+
+    // Hash function for generating index from key
+    size_t hash(const KeyType& key) {
+        // Simple modulo hashing
+        return std::hash<KeyType>{}(key) % size;
+    }
+
+    // Double hashing function to handle collisions
+    size_t doubleHash(const KeyType& key, size_t probe) {
+        // Another hash function for double hashing
+        return 2 * hash(key) + probe;
+    }
+
+public:
+    // Constructor to initialize the hashtable with given size
+    SmarterHashtable(size_t tableSize) : size(tableSize) {
+        table.resize(size);
+    }
+
+    // Insert a key-value pair into the hashtable
+    void insert(const KeyType& key, const ValueType& value) {
+        size_t index = hash(key);
+        // If key already exists, overwrite value
+        if (table[index].first == key) {
+            table[index].second = value;
+        } else {
+            // Handle collisions using double hashing
+            size_t probe = 1;
+            while (table[index].first != KeyType()) { // Assuming default constructed key is not used
+                index = doubleHash(key, probe++);
+            }
+            table[index] = std::make_pair(key, value);
+        }
+    }
+
+    // Check if the hashtable contains the given key
+    bool contains(const KeyType& key) {
+        size_t index = hash(key);
+        // If key exists at original index or via double hashing
+        if (table[index].first == key) {
+            return true;
+        } else {
+            size_t probe = 1;
+            // Continue probing until an empty slot is found
+            while (table[index].first != KeyType()) { // Assuming default constructed key is not used
+                index = doubleHash(key, probe++);
+                // If key is found during probing
+                if (table[index].first == key) {
+                    return true;
+                }
+            }
+            // Key not found
+            return false;
+        }
+    }
+};
+
+int main() {
+    // Simple Hashtable Tests
+    SimpleHashtable<int, std::string> simpleHashtable(10);
+    simpleHashtable.insert(5, "apple");
+    simpleHashtable.insert(15, "banana");
+    std::cout << "Contains 5: " << simpleHashtable.contains(5) << std::endl; // true
+    std::cout << "Contains 10: " << simpleHashtable.contains(10) << std::endl; // false
+
+    // Smarter Hashtable (Double Hashing) Tests
+    SmarterHashtable<int, std::string> smarterHashtable(10);
+    smarterHashtable.insert(5, "apple");
+    smarterHashtable.insert(15, "banana");
+    std::cout << "Contains 5: " << smarterHashtable.contains(5) << std::endl; // true
+    std::cout << "Contains 10: " << smarterHashtable.contains(10) << std::endl; // false
+
+    return 0;
+}
