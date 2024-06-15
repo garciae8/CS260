@@ -1,118 +1,111 @@
-Design for assignment 6 
+Design for assignment 7
 
-Node Structure: Stores the value and pointers to left and right children.
-BinarySearchTree Class: Manages the root node and provides methods to manipulate the tree.
-Attributes:
+Diagram
 
-Node* root: The root node of the BST.
-Methods:
++----------------------------+
+|         Hashtable          |
++----------------------------+
+| - table: vector<pair<K, V>>|----+
+| - size: size_t             |    |
++----------------------------+    |
+| + hash(key: K): size_t     |    |
+| + insert(key: K, value: V) |    |
+| + contains(key: K): bool   |    |
++----------------------------+    |
+                                   |
+           +-----------------------+
+           |
++----------------------------+
+|    SimpleHashtable<K, V>   |
++----------------------------+
+| + insert(key: K, value: V) |
+| + contains(key: K): bool   |
++----------------------------+
 
-Node* addRecursive(Node* current, int value): Helper function to recursively add a value.
-Node* removeRecursive(Node* current, int value): Helper function to recursively remove a value.
-Node* findMin(Node* node): Helper function to find the minimum value node.
-void inOrderRecursive(Node* node): Helper function for in-order traversal.
-void preOrderRecursive(Node* node): Helper function for pre-order traversal.
-void postOrderRecursive(Node* node): Helper function for post-order traversal.
-void breadthFirstTraversal(): Helper function for breadth-first traversal.
-void add(int value): Public method to add a value.
-void remove(int value): Public method to remove a value.
-void inOrderTraversal(): Public method for in-order traversal.
-void preOrderTraversal(): Public method for pre-order traversal.
-void postOrderTraversal(): Public method for post-order traversal.
-void levelOrderTraversal(): Public method for level-order traversal.
+           +-----------------------+
+           |
++----------------------------+
+|    SmarterHashtable<K, V>  |
++----------------------------+
+| + doubleHash(key: K, p: sz)|    
+| + insert(key: K, value: V) |
+| + contains(key: K): bool   |
++----------------------------+
 
-Tests
-Test add Method:
-Add values and verify the structure through in-order traversal.
-Test remove Method:
-Remove a value and verify the structure through in-order traversal.
-Test Traversal Methods:
-Verify the correct order of elements after various insertions and deletions for in-order, pre-order, post-order, and level-order traversals.
+Explanaion
 
-Explanation
+int main() {
+    // Simple Hashtable Tests
+    SimpleHashtable<int, std::string> simpleHashtable(10);
+    simpleHashtable.insert(5, "apple");
+    simpleHashtable.insert(15, "banana");
+    std::cout << "Contains 5: " << simpleHashtable.contains(5) << std::endl; // true
+    std::cout << "Contains 10: " << simpleHashtable.contains(10) << std::endl; // false
 
-struct Node {
-    int data;
-    Node* left;
-    Node* right;
+    // Smarter Hashtable (Double Hashing) Tests
+    SmarterHashtable<int, std::string> smarterHashtable(10);
+    smarterHashtable.insert(5, "apple");
+    smarterHashtable.insert(15, "banana");
+    std::cout << "Contains 5: " << smarterHashtable.contains(5) << std::endl; // true
+    std::cout << "Contains 10: " << smarterHashtable.contains(10) << std::endl; // false
 
-    Node(int value) : data(value), left(nullptr), right(nullptr) {}
-};
-
-This structure defines a Node for storing values and pointers to the left and right children, demonstrating the basic building block of the binary search tree.
-
-
-void add(int value) {
-    root = addRecursive(root, value);
+    return 0;
 }
 
+These tests ensure the hashtables behave as expected.
 
-This method shows how a new value is added to the BST in the appropriate position, ensuring the tree maintains its ordering properties.
-
-
-void testAddAndTraversal() {
-    BinarySearchTree bst;
-    bst.add(5);
-    bst.add(3);
-    bst.add(7);
-    bst.add(2);
-    bst.add(4);
-
-    std::cout << "In-order traversal: ";
-    bst.inOrderTraversal(); // Expected: 2 3 4 5 7
+size_t hash(const KeyType& key) {
+    return std::hash<KeyType>{}(key) % size;
 }
 
-This test demonstrates adding multiple values to the BST and verifies the tree's structure through in-order traversal, showing that elements are inserted correctly.
+hashtable classes use simple modulo hashing to compute the index from the key.
 
 
-void remove(int value) {
-    root = removeRecursive(root, value);
+void insert(const KeyType& key, const ValueType& value) {
+    size_t index = hash(key);
+    table[index] = std::make_pair(key, value);
 }
 
-This method demonstrates the process of removing a node from the BST, ensuring the tree's structure is maintained by selecting an appropriate replacement node.
+The insert function computes the index using the hash function and places the key-value pair at the computed index. In SimpleHashtable, it overwrites any existing value at that index.
 
-void inOrderTraversal() {
-    inOrderRecursive(root);
-    std::cout << std::endl;
+bool contains(const KeyType& key) {
+    size_t index = hash(key);
+    return table[index].first == key;
 }
 
-This method is supposed to perform an in-order traversal of the BST, going through the nodes in order, which is a necessary traversal method for binary trees.
+The contains function checks if a given key exists in the hashtable. It computes the index using the hash function and checks if the key at that index matches the given key.
 
-
-void preOrderTraversal() {
-    preOrderRecursive(root);
-    std::cout << std::endl;
+size_t doubleHash(const KeyType& key, size_t probe) {
+    return (hash(key) + probe) % size;
 }
 
-This method performs a post-order traversal of the BST, going through the left subtree first, then the right subtree, and the root node last.
-
-
-void levelOrderTraversal() {
-    breadthFirstTraversal();
-    std::cout << std::endl;
+void insert(const KeyType& key, const ValueType& value) {
+    size_t index = hash(key);
+    if (table[index].first == key) {
+        table[index].second = value;
+    } else {
+        size_t probe = 1;
+        while (table[index].first != KeyType()) {
+            index = doubleHash(key, probe++);
+        }
+        table[index] = std::make_pair(key, value);
+    }
 }
 
-
-This method performs a level-order traversal of the BST, visiting nodes level by level, which is useful for tasks that require processing nodes in their level order.
-
-
-void testAllTraversals() {
-    BinarySearchTree bst;
-    bst.add(5);
-    bst.add(3);
-    bst.add(7);
-    bst.add(2);
-    bst.add(4);
-
-    std::cout << "Pre-order traversal: ";
-    bst.preOrderTraversal(); // Expected: 5 3 2 4 7
-
-    std::cout << "Post-order traversal: ";
-    bst.postOrderTraversal(); // Expected: 2 4 3 7 5
-
-    std::cout << "Level-order traversal: ";
-    bst.levelOrderTraversal(); // Expected: 5 3 7 2 4
+bool contains(const KeyType& key) {
+    size_t index = hash(key);
+    if (table[index].first == key) {
+        return true;
+    } else {
+        size_t probe = 1;
+        while (table[index].first != KeyType()) {
+            index = doubleHash(key, probe++);
+            if (table[index].first == key) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
 
-
-This test demonstrates the correctness of all implemented traversal methods (pre-order, post-order, and level-order) by adding values to the BST and verifying the output of each traversal method.
+The SmarterHashtable class implements double hashing to handle collisions more efficiently.
