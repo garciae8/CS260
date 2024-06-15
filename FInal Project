@@ -1,0 +1,169 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <queue>
+#include <limits>
+#include <algorithm>
+
+// Vertex class
+class Vertex {
+public:
+    int id;              // Unique identifier for the vertex
+    std::string name;    // Name or label of the vertex
+    double x, y;         // Coordinates for the vertex location (optional)
+
+    // Constructor to initialize the vertex
+    Vertex(int id, const std::string& name, double x = 0, double y = 0)
+        : id(id), name(name), x(x), y(y) {}
+};
+
+// Edge class
+class Edge {
+public:
+    Vertex source;       // The starting vertex of the edge
+    Vertex destination;  // The ending vertex of the edge
+    double weight;       // The weight of the edge, representing the distance or cost
+
+    // Constructor to initialize the edge
+    Edge(const Vertex& source, const Vertex& destination, double weight)
+        : source(source), destination(destination), weight(weight) {}
+};
+
+// Graph class
+class Graph {
+private:
+    std::unordered_map<int, Vertex> vertices; // Stores all the vertices (locations) in the graph
+    std::vector<Edge> edges;                  // Stores all the edges (paths) between vertices
+
+public:
+    // Adds a new vertex (location) to the graph
+    void addVertex(const Vertex& vertex) {
+        vertices[vertex.id] = vertex;
+    }
+
+    // Adds a new edge (path) between two vertices
+    void addEdge(const Vertex& source, const Vertex& destination, double weight) {
+        Edge edge(source, destination, weight);
+        edges.push_back(edge);
+    }
+
+    // Finds the shortest path between two vertices using Dijkstra's algorithm
+    std::vector<Vertex> shortestPath(const Vertex& start, const Vertex& end) {
+        std::unordered_map<int, double> distances;
+        std::unordered_map<int, int> previous;
+        for (const auto& vertex_pair : vertices) {
+            distances[vertex_pair.first] = std::numeric_limits<double>::infinity();
+        }
+        distances[start.id] = 0;
+
+        auto cmp = [&distances](int left, int right) {
+            return distances[left] > distances[right];
+        };
+        std::priority_queue<int, std::vector<int>, decltype(cmp)> queue(cmp);
+        queue.push(start.id);
+
+        while (!queue.empty()) {
+            int current = queue.top();
+            queue.pop();
+
+            if (current == end.id) {
+                break;
+            }
+
+            for (const auto& edge : edges) {
+                if (edge.source.id == current) {
+                    double newDist = distances[current] + edge.weight;
+                    if (newDist < distances[edge.destination.id]) {
+                        distances[edge.destination.id] = newDist;
+                        previous[edge.destination.id] = current;
+                        queue.push(edge.destination.id);
+                    }
+                }
+            }
+        }
+
+        std::vector<Vertex> path;
+        for (int at = end.id; at != start.id; at = previous[at]) {
+            path.push_back(vertices[at]);
+        }
+        path.push_back(start);
+        std::reverse(path.begin(), path.end());
+        return path;
+    }
+
+    // Finds the minimum spanning tree using Kruskal's algorithm
+    std::vector<Edge> minimumSpanningTree() {
+        std::vector<Edge> result;
+        std::sort(edges.begin(), edges.end(), [](const Edge& a, const Edge& b) {
+            return a.weight < b.weight;
+        });
+
+        std::unordered_map<int, int> parent;
+        for (const auto& vertex_pair : vertices) {
+            parent[vertex_pair.first] = vertex_pair.first;
+        }
+
+        auto find = [&parent](int vertex) {
+            if (parent[vertex] != vertex) {
+                parent[vertex] = find(parent[vertex]);
+            }
+            return parent[vertex];
+        };
+
+        auto unionSets = [&parent](int a, int b) {
+            int rootA = find(a);
+            int rootB = find(b);
+            if (rootA != rootB) {
+                parent[rootB] = rootA;
+            }
+        };
+
+        for (const auto& edge : edges) {
+            int rootSource = find(edge.source.id);
+            int rootDestination = find(edge.destination.id);
+            if (rootSource != rootDestination) {
+                result.push_back(edge);
+                unionSets(rootSource, rootDestination);
+            }
+        }
+
+        return result;
+    }
+};
+
+// Example usage
+int main() {
+    Graph g;
+
+    Vertex v1(1, "A");
+    Vertex v2(2, "B");
+    Vertex v3(3, "C");
+    Vertex v4(4, "D");
+
+    g.addVertex(v1);
+    g.addVertex(v2);
+    g.addVertex(v3);
+    g.addVertex(v4);
+
+    g.addEdge(v1, v2, 1.0);
+    g.addEdge(v2, v3, 2.0);
+    g.addEdge(v3, v4, 1.0);
+    g.addEdge(v1, v4, 4.0);
+    g.addEdge(v1, v3, 3.0);
+
+    std::vector<Vertex> shortest_path = g.shortestPath(v1, v4);
+    std::cout << "Shortest path from " << v1.name << " to " << v4.name << ": ";
+    for (const auto& vertex : shortest_path) {
+        std::cout << vertex.name << " ";
+    }
+    std::cout << std::endl;
+
+    std::vector<Edge> mst = g.minimumSpanningTree();
+    std::cout << "Minimum spanning tree edges: ";
+    for (const auto& edge : mst) {
+        std::cout << "(" << edge.source.name << ", " << edge.destination.name << ") ";
+    }
+    std::cout << std::endl;
+
+    return 0;
