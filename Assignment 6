@@ -1,0 +1,191 @@
+#include <iostream>
+#include <queue>
+
+struct Node {
+    int data;
+    Node* left;
+    Node* right;
+
+    Node(int value) : data(value), left(nullptr), right(nullptr) {}
+};
+
+class BinarySearchTree {
+private:
+    Node* root;
+
+    Node* addRecursive(Node* current, int value) {
+        if (current == nullptr) {
+            return new Node(value);
+        }
+
+        if (value < current->data) {
+            current->left = addRecursive(current->left, value);
+        } else if (value > current->data) {
+            current->right = addRecursive(current->right, value);
+        }
+
+        return current;
+    }
+
+    Node* findMin(Node* node) {
+        Node* current = node;
+        while (current && current->left != nullptr) {
+            current = current->left;
+        }
+        return current;
+    }
+
+    Node* removeRecursive(Node* current, int value) {
+        if (current == nullptr) {
+            return current;
+        }
+
+        if (value < current->data) {
+            current->left = removeRecursive(current->left, value);
+        } else if (value > current->data) {
+            current->right = removeRecursive(current->right, value);
+        } else {
+            if (current->left == nullptr) {
+                Node* temp = current->right;
+                delete current;
+                return temp;
+            } else if (current->right == nullptr) {
+                Node* temp = current->left;
+                delete current;
+                return temp;
+            }
+
+            Node* temp = findMin(current->right);
+            current->data = temp->data;
+            current->right = removeRecursive(current->right, temp->data);
+        }
+
+        return current;
+    }
+
+    void inOrderRecursive(Node* node) {
+        if (node != nullptr) {
+            inOrderRecursive(node->left);
+            std::cout << node->data << " ";
+            inOrderRecursive(node->right);
+        }
+    }
+
+    void preOrderRecursive(Node* node) {
+        if (node != nullptr) {
+            std::cout << node->data << " ";
+            preOrderRecursive(node->left);
+            preOrderRecursive(node->right);
+        }
+    }
+
+    void postOrderRecursive(Node* node) {
+        if (node != nullptr) {
+            postOrderRecursive(node->left);
+            postOrderRecursive(node->right);
+            std::cout << node->data << " ";
+        }
+    }
+
+    void breadthFirstTraversal() {
+        if (root == nullptr) return;
+
+        std::queue<Node*> queue;
+        queue.push(root);
+
+        while (!queue.empty()) {
+            Node* current = queue.front();
+            queue.pop();
+
+            std::cout << current->data << " ";
+
+            if (current->left != nullptr) queue.push(current->left);
+            if (current->right != nullptr) queue.push(current->right);
+        }
+    }
+
+public:
+    BinarySearchTree() : root(nullptr) {}
+
+    void add(int value) {
+        root = addRecursive(root, value);
+    }
+
+    void remove(int value) {
+        root = removeRecursive(root, value);
+    }
+
+    void inOrderTraversal() {
+        inOrderRecursive(root);
+        std::cout << std::endl;
+    }
+
+    void preOrderTraversal() {
+        preOrderRecursive(root);
+        std::cout << std::endl;
+    }
+
+    void postOrderTraversal() {
+        postOrderRecursive(root);
+        std::cout << std::endl;
+    }
+
+    void levelOrderTraversal() {
+        breadthFirstTraversal();
+        std::cout << std::endl;
+    }
+};
+
+// Tests
+
+void testAddAndTraversal() {
+    BinarySearchTree bst;
+    bst.add(5);
+    bst.add(3);
+    bst.add(7);
+    bst.add(2);
+    bst.add(4);
+
+    std::cout << "In-order traversal: ";
+    bst.inOrderTraversal(); // Expected: 2 3 4 5 7
+}
+
+void testRemove() {
+    BinarySearchTree bst;
+    bst.add(5);
+    bst.add(3);
+    bst.add(7);
+    bst.add(2);
+    bst.add(4);
+
+    bst.remove(3);
+
+    std::cout << "In-order traversal after removing 3: ";
+    bst.inOrderTraversal(); // Expected: 2 4 5 7
+}
+
+void testAllTraversals() {
+    BinarySearchTree bst;
+    bst.add(5);
+    bst.add(3);
+    bst.add(7);
+    bst.add(2);
+    bst.add(4);
+
+    std::cout << "Pre-order traversal: ";
+    bst.preOrderTraversal(); // Expected: 5 3 2 4 7
+
+    std::cout << "Post-order traversal: ";
+    bst.postOrderTraversal(); // Expected: 2 4 3 7 5
+
+    std::cout << "Level-order traversal: ";
+    bst.levelOrderTraversal(); // Expected: 5 3 7 2 4
+}
+
+int main() {
+    testAddAndTraversal();
+    testRemove();
+    testAllTraversals();
+
+    return 0;
+}
