@@ -1,0 +1,86 @@
+#include <iostream>
+
+// Node structure for linked list
+struct Node {
+    int data;
+    Node* next;
+    Node(int val) : data(val), next(nullptr) {}
+};
+
+// Queue class using linked list
+class Queue {
+private:
+    Node* front;
+    Node* rear;
+
+public:
+    Queue() : front(nullptr), rear(nullptr) {}
+
+    ~Queue() {
+        while (front != nullptr) {
+            Node* temp = front;
+            front = front->next;
+            delete temp;
+        }
+    }
+
+    void enqueue(int val) {
+        Node* newNode = new Node(val);
+        if (rear == nullptr) {
+            front = newNode;
+            rear = newNode;
+        } else {
+            rear->next = newNode;
+            rear = newNode;
+        }
+    }
+
+    int dequeue() {
+        if (front == nullptr) {
+            std::cout << "Queue is empty." << std::endl;
+            return -1;
+        }
+        int val = front->data;
+        Node* temp = front;
+        front = front->next;
+        delete temp;
+        if (front == nullptr) {
+            rear = nullptr;
+        }
+        return val;
+    }
+
+    int peek() {
+        if (front == nullptr) {
+            std::cout << "Queue is empty." << std::endl;
+            return -1;
+        }
+        return front->data;
+    }
+};
+
+int main() {
+    Queue queue;
+
+    // Test enqueue
+    queue.enqueue(10);
+    queue.enqueue(20);
+    queue.enqueue(30);
+
+    // Test dequeue
+    std::cout << "Dequeued: " << queue.dequeue() << std::endl;
+    std::cout << "Dequeued: " << queue.dequeue() << std::endl;
+    std::cout << "Dequeued: " << queue.dequeue() << std::endl;
+
+    // Test dequeue on empty queue
+    std::cout << "Dequeued: " << queue.dequeue() << std::endl;
+
+    // Test enqueue and peek
+    queue.enqueue(40);
+    std::cout << "Peeked: " << queue.peek() << std::endl;
+
+    // Test dequeue after peeking
+    std::cout << "Dequeued: " << queue.dequeue() << std::endl;
+
+    return 0;
+}
